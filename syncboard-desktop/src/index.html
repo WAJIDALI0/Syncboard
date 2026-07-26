@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SyncBoard Desktop</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, sans-serif;
+      background: #09090b;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .card {
+      background: #18181b;
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid #27272a;
+      width: 400px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #27272a;
+      background: #27272a;
+      color: #fff;
+      box-sizing: border-box;
+    }
+    button {
+      background: #fff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #msg {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>SyncBoard Desktop</h2>
+    <div id="login-box">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="pass" placeholder="Password" />
+      <button onclick="login()">Log In</button>
+    </div>
+    <div id="task-box" style="display: none;">
+      <select id="project" style="margin-bottom: 10px;">
+        <option value="" disabled selected>Loading projects...</option>
+      </select>
+      <input type="text" id="title" placeholder="New Task Title" />
+      <button onclick="addTask()">Add Task</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+
+  <script>
+    const url = "http://localhost:3000/api/extension";
+    const SUPABASE_URL = "https://ikntoumeerjdsgvjdify.supabase.co";
+    const key = "sb_publishable_eUt6lWPlD5I_UqdFCmx6oQ_AXc3zyn1";
+    let token = null, uid = null;
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("pass").value;
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': key },
+        body: JSON.stringify({ email, password })
+      });
+      if(res.ok) {
+        const data = await res.json();
+        token = data.access_token;
+        uid = data.user.id;
+        document.getElementById("login-box").style.display = 'none';
+        document.getElementById("task-box").style.display = 'block';
+        document.getElementById("msg").innerText = "Logged in!";
+        fetchProjects();
+      } else {
+        document.getElementById("msg").innerText = "Login failed";
+      }
+    }
+
+    async function fetchProjects() {
+      const select = document.getElementById("project");
+      try {
+        const res = await fetch(`${url}/projects?userId=${uid}`);
+        const data = await res.json();
+        select.innerHTML = "";
+        if(res.ok && data.length > 0) {
+          data.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = p.name;
+            select.appendChild(opt);
+          });
+        } else {
+          select.innerHTML = '<option value="" disabled>No projects</option>';
+        }
+      } catch (err) {
+        select.innerHTML = '<option value="" disabled>Error loading</option>';
+      }
+    }
+
+    async function addTask() {
+      const title = document.getElementById("title").value;
+      const projectId = document.getElementById("project").value;
+      
+      if (!title || !projectId) {
+        document.getElementById("msg").innerText = "Title and project required";
+        return;
+      }
+
+      const res = await fetch(`${url}/tasks`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title, status: "TODO", priority: "MEDIUM", project_id: projectId, user_id: uid })
+      });
+      if(res.ok) {
+        document.getElementById("msg").innerText = "Task added!";
+        document.getElementById("title").value = "";
+      } else {
+        document.getElementById("msg").innerText = "Failed to add";
+      }
+    }
+  </script>
+</body>
+</html>

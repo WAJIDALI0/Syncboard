@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SyncBoard Extension</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">S</div>
+      <h1>SyncBoard</h1>
+    </div>
+    
+    <div id="login-section" class="section">
+      <p>Log in with your SyncBoard account to add tasks.</p>
+      <input type="email" id="email" placeholder="Email address" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button id="login-btn">Log In</button>
+      <p id="login-error" class="error"></p>
+    </div>
+
+    <div id="task-section" class="section hidden">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <p style="margin: 0;"><strong>Your Tasks</strong></p>
+        <a href="http://localhost:3000/dashboard" target="_blank" id="open-dashboard" style="font-size: 12px; color: #3b82f6; text-decoration: none;">Open Dashboard ↗</a>
+      </div>
+      
+      <div id="task-list" style="max-height: 150px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #27272a; padding: 5px; border-radius: 6px;">
+        <p style="font-size: 12px; color: #a1a1aa; text-align: center;">Loading tasks...</p>
+      </div>
+
+      <p style="margin-top: 10px; border-top: 1px solid #27272a; padding-top: 10px;">Create a new task.</p>
+      <input type="text" id="task-title" placeholder="Task title" required>
+      <textarea id="task-desc" placeholder="Task description (optional)"></textarea>
+      <div class="row">
+        <select id="task-project">
+          <option value="" disabled selected>Loading projects...</option>
+        </select>
+      </div>
+      <div class="row">
+        <select id="task-priority">
+          <option value="LOW">Low</option>
+          <option value="MEDIUM" selected>Medium</option>
+          <option value="HIGH">High</option>
+        </select>
+        <button id="add-task-btn">Add Task</button>
+      </div>
+      <p id="task-message"></p>
+      <button id="logout-btn" class="secondary">Log Out</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

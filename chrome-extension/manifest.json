@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "SyncBoard Quick Add",
+  "version": "1.0.0",
+  "description": "Quickly add tasks to your SyncBoard workspace.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Add Task to SyncBoard"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://ikntoumeerjdsgvjdify.supabase.co/*",
+    "http://localhost:3000/*"
+  ]
+}
