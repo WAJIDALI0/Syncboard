@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       where: { user_id: userId, workspace_id: { not: null } },
       select: { workspace_id: true }
     })
-    const workspaceIds = memberships.map(m => m.workspace_id as string)
+    const workspaceIds = memberships.map((m: any) => m.workspace_id as string)
 
     const projects = await prisma.project.findMany({
       where: { workspace_id: { in: workspaceIds } },

@@ -26,8 +26,8 @@ export async function GET(request: Request) {
     })
 
     const workspaces = memberships
-      .filter(m => m.workspace)
-      .map(m => m.workspace)
+      .filter((m: any) => m.workspace)
+      .map((m: any) => m.workspace)
 
     return NextResponse.json({ workspaces })
   } catch (error: any) {
