@@ -85,7 +85,7 @@ export async function getTasks() {
   })
   
   // Format to match UI expectations (serialize dates, provide user_id equivalent via assignee)
-  return tasks.map(t => ({
+  return tasks.map((t: any) => ({
     id: t.id,
     title: t.title,
     description: t.description,
@@ -207,7 +207,7 @@ export async function getRecentActivities() {
     }
   })
 
-  return activities.map(a => ({
+  return activities.map((a: any) => ({
     ...a,
     created_at: a.created_at.toISOString()
   }))

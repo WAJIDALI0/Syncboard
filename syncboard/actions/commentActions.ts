@@ -19,7 +19,7 @@ export async function getComments(taskId: string) {
     }
   })
 
-  return comments.map(c => ({
+  return comments.map((c: any) => ({
     ...c,
     created_at: c.created_at.toISOString(),
     updated_at: c.updated_at.toISOString(),

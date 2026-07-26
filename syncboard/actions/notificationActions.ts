@@ -15,7 +15,7 @@ export async function getNotifications() {
     take: 10
   })
 
-  return notifications.map(n => ({
+  return notifications.map((n: any) => ({
     ...n,
     created_at: n.created_at.toISOString()
   }))

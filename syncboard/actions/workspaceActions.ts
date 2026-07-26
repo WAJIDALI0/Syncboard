@@ -28,7 +28,7 @@ export async function getUserWorkspaces() {
   })
 
   // Filter out any where workspace is null (due to relations)
-  return memberships.filter(m => m.workspace).map(m => m.workspace)
+  return memberships.filter((m: any) => m.workspace).map((m: any) => m.workspace)
 }
 
 export async function getActiveWorkspaceContext() {
