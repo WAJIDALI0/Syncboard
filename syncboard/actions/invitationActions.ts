@@ -99,7 +99,7 @@ export async function acceptInvitation(invitationId: string) {
     }
 
     // Process acceptance within a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // 1. Mark as accepted
       await tx.invitation.update({
         where: { id: invitationId },
