@@ -1,0 +1,275 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider        = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String?
+  avatar_url    String?
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  
+  // Relations
+  memberships   Membership[]
+  tasks         Task[]
+  comments      Comment[]
+  owned_orgs    Organization[] @relation("OrgOwner")
+  activities    Activity[]
+  notifications Notification[]
+  messages      Message[]
+  invitations_sent Invitation[] @relation("Inviter")
+  attachments   Attachment[]
+  notification_prefs NotificationPreferences?
+}
+
+model Organization {
+  id            String         @id @default(uuid())
+  name          String
+  owner_id      String
+  is_personal   Boolean        @default(false)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  owner         User           @relation("OrgOwner", fields: [owner_id], references: [id], onDelete: Cascade)
+  workspaces    Workspace[]
+  members       Membership[]
+  invitations   Invitation[]
+}
+
+model Workspace {
+  id            String         @id @default(uuid())
+  name          String
+  org_id        String
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  organization  Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  projects      Project[]
+  members       Membership[]
+  canvas        Canvas?
+  messages      Message[]
+  invitations   Invitation[]
+  settings      WorkspaceSettings?
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  GUEST
+}
+
+model Membership {
+  id            String         @id @default(uuid())
+  user_id       String
+  org_id        String?
+  workspace_id  String?
+  role          Role           @default(MEMBER)
+  created_at    DateTime       @default(now())
+
+  // Relations
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  organization  Organization?  @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  workspace     Workspace?     @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, org_id])
+  @@unique([user_id, workspace_id])
+}
+
+model Project {
+  id            String         @id @default(uuid())
+  name          String
+  description   String?
+  workspace_id  String
+  is_private    Boolean        @default(false)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  workspace     Workspace      @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  tasks         Task[]
+  tags          Tag[]
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Task {
+  id            String         @id @default(uuid())
+  title         String
+  description   String?
+  status        TaskStatus     @default(TODO)
+  priority      TaskPriority   @default(MEDIUM)
+  due_date      DateTime?
+  project_id    String
+  assignee_id   String?
+  parent_id     String?
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  project       Project        @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  assignee      User?          @relation(fields: [assignee_id], references: [id], onDelete: SetNull)
+  parent_task   Task?          @relation("Subtasks", fields: [parent_id], references: [id], onDelete: Cascade)
+  subtasks      Task[]         @relation("Subtasks")
+  tags          Tag[]
+  comments      Comment[]
+  activities    Activity[]
+  attachments   Attachment[]
+}
+
+model Tag {
+  id            String         @id @default(uuid())
+  name          String
+  color         String         @default("#3b82f6") // Blue by default
+  project_id    String
+  created_at    DateTime       @default(now())
+
+  // Relations
+  project       Project        @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  tasks         Task[]
+}
+
+model Notification {
+  id            String         @id @default(uuid())
+  user_id       String
+  message       String
+  is_read       Boolean        @default(false)
+  link          String?
+  created_at    DateTime       @default(now())
+
+  // Relations
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id            String         @id @default(uuid())
+  content       String
+  task_id       String
+  author_id     String
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  task          Task           @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  author        User           @relation(fields: [author_id], references: [id], onDelete: Cascade)
+}
+
+model Activity {
+  id            String         @id @default(uuid())
+  action        String
+  task_id       String?
+  user_id       String
+  created_at    DateTime       @default(now())
+
+  // Relations
+  task          Task?          @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Canvas {
+  id            String         @id @default(uuid())
+  workspace_id  String         @unique
+  canvas_json   String         @db.Text
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  workspace     Workspace      @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id            String         @id @default(uuid())
+  content       String         @db.Text
+  workspace_id  String
+  user_id       String
+  created_at    DateTime       @default(now())
+
+  // Relations
+  workspace     Workspace      @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model Invitation {
+  id            String         @id @default(uuid())
+  email         String
+  role          Role           @default(MEMBER)
+  status        InviteStatus   @default(PENDING)
+  org_id        String
+  workspace_id  String
+  inviter_id    String
+  created_at    DateTime       @default(now())
+  expires_at    DateTime
+  
+  // Relations
+  organization  Organization   @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  workspace     Workspace      @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  inviter       User           @relation("Inviter", fields: [inviter_id], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id            String         @id @default(uuid())
+  file_url      String
+  file_name     String
+  file_type     String
+  size_bytes    Int
+  task_id       String
+  user_id       String
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  task          Task           @relation(fields: [task_id], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model WorkspaceSettings {
+  id            String         @id @default(uuid())
+  workspace_id  String         @unique
+  allow_guests  Boolean        @default(true)
+  default_role  Role           @default(MEMBER)
+  require_2fa   Boolean        @default(false)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  // Relations
+  workspace     Workspace      @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+}
+
+model NotificationPreferences {
+  id               String         @id @default(uuid())
+  user_id          String         @unique
+  email_invites    Boolean        @default(true)
+  email_mentions   Boolean        @default(true)
+  email_assignments Boolean       @default(true)
+  push_enabled     Boolean        @default(false)
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  // Relations
+  user             User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
