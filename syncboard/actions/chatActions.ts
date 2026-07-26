@@ -23,7 +23,7 @@ export async function getChatMessages(workspaceId: string) {
   })
 
   // Format dates for the client
-  return messages.map(m => ({
+  return messages.map((m: any) => ({
     ...m,
     created_at: m.created_at.toISOString()
   }))
